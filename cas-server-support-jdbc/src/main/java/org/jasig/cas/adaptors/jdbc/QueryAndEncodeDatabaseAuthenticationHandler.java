@@ -131,10 +131,9 @@ public class QueryAndEncodeDatabaseAuthenticationHandler extends AbstractJdbcUse
             if (!values.get(this.passwordFieldName).equals(digestedPassword)) {
                 throw new FailedLoginException("Password does not match value on record.");
             }
-
-            HandlerResult handlerResult =  createHandlerResult(transformedCredential,
+            return createHandlerResult(transformedCredential,
                     this.principalFactory.createPrincipal(username), null);
-            return handlerResult;
+
         } catch (final IncorrectResultSizeDataAccessException e) {
             if (e.getActualSize() == 0) {
                 throw new AccountNotFoundException(username + " not found with SQL query");

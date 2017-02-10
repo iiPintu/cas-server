@@ -61,18 +61,6 @@
             </exclusion>
         </exclusions>
     </dependency>
-      <dependency>
-          <groupId>org.jasig.cas</groupId>
-          <artifactId>cas-server-support-jdbc</artifactId>
-          <version>${project.version}</version>
-      </dependency>
-
-      <dependency>
-          <groupId>org.jasig.cas</groupId>
-          <artifactId>cas-server-core</artifactId>
-          <version>${project.version}</version>
-      </dependency>
-
     <dependency>
       <groupId>org.springframework</groupId>
       <artifactId>spring-expression</artifactId>
@@ -108,18 +96,12 @@
       <groupId>io.dropwizard.metrics</groupId>
       <artifactId>metrics-servlets</artifactId>
     </dependency>
+    <dependency>
+      <groupId>org.jasig.cas</groupId>
+      <artifactId>cas-server-support-jdbc</artifactId>
+      <version>4.1.8</version>
+    </dependency>
 
-    <dependency>
-            <groupId>taglibs</groupId>
-            <artifactId>standard</artifactId>
-            <version>1.1.2</version>
-            <type>jar</type>
-    </dependency>
-    <dependency>
-        <groupId>com.tceasy</groupId>
-        <artifactId>tceasy-common-util</artifactId>
-        <version>0.4.8</version>
-    </dependency>
     <dependency>
         <groupId>ognl</groupId>
         <artifactId>ognl</artifactId>
@@ -187,6 +169,94 @@
   <properties>
     <cs.dir>${project.parent.basedir}</cs.dir>
   </properties>
+    <profiles>
+        <profile>
+            <id>release-sign-artifacts</id>
+            <activation>
+                <property>
+                    <name>performRelease</name>
+                    <value>true</value>
+                </property>
+            </activation>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-gpg-plugin</artifactId>
+                        <version>1.0</version>
+                        <executions>
+                            <execution>
+                                <id>sign-artifacts</id>
+                                <phase>verify</phase>
+                                <goals>
+                                    <goal>sign</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+        <profile>
+            <id>local</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+            <properties>
+                <maven.test.skip>true</maven.test.skip>
+                <database.url>jdbc:mysql://192.5.0.20:3306/prod_test</database.url>
+                <database.username>soft_all_db</database.username>
+                <database.password>soft_all_db@56789</database.password>
+                <log.level>DEBUG</log.level>
+                <log.dirs>/server/logs/cas/</log.dirs>
+                <log.appendName>infolog,stdout</log.appendName>
+                <passwordEnvName>TCEASY_PASSWORD</passwordEnvName>
+            </properties>
+        </profile>
+        <profile>
+            <id>test</id>
+            <properties>
+                <maven.test.skip>true</maven.test.skip>
+                <database.url>jdbc:mysql://10.171.48.48:3306/prod_test</database.url>
+                <database.username>sof_account_dev</database.username>
+                <database.password>soft_DB_Connection@6869#</database.password>
+                <log.level>INFO</log.level>
+                <log.dirs>/server/logs/cas/</log.dirs>
+                <log.appendName>infolog,errorlog</log.appendName>
+                <passwordEnvName>TCEASY_PASSWORD</passwordEnvName>
+            </properties>
+        </profile>
+
+        <profile>
+            <id>prep</id>
+            <properties>
+                <maven.test.skip>true</maven.test.skip>
+                <database.url>jdbc:mysql://172.16.2.7:8066/prod_test</database.url>
+                <database.username>tjd</database.username>
+                <database.password>pOIIgSVs3t</database.password>
+                <log.level>INFO</log.level>
+                <log.dirs>/server/logs/cas/</log.dirs>
+                <log.appendName>infolog,errorlog</log.appendName>
+                <passwordEnvName>TCEASY_PASSWORD</passwordEnvName>
+            </properties>
+        </profile>
+
+        <profile>
+            <id>product</id>
+            <properties>
+                <!-- 注意 ， 这个是只读数据库！-->
+                <maven.test.skip>true</maven.test.skip>
+                <database.url>ENC(sejGAdtMItAbb1EznCmZyMlyAMaC7yGC8kTpz30Wvrgd5Ti8TWBc8kiVqiDRSzXP)</database.url>
+                <database.username>ENC(5RbhSXCRQJ0UfRcfFM6xZQ==)</database.username>
+                <database.password>ENC(+vhzPDFxE7vlzgQI/hCFdulJ5mcd/brsJZ19XtbvRDsp+PsfYtnekQ==)</database.password>
+                <log.level>INFO</log.level>
+                <log.dirs>/server/logs/cas/</log.dirs>
+                <log.appendName>infolog,errorlog</log.appendName>
+                <passwordEnvName>PROD_VISIT</passwordEnvName>
+            </properties>
+        </profile>
+    </profiles>
+
 </project>
 
 

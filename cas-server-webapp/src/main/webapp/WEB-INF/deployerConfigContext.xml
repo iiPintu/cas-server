@@ -108,28 +108,22 @@
           class="org.jasig.cas.authentication.AcceptUsersAuthenticationHandler">
         <property name="users">
             <map>
-                <entry key="casuser" value="Mellon"/>
+                <entry key="111" value="111"/>
             </map>
         </property>
-    </bean>-->
+    </bean>
+-->
 
 
 
-	<bean id="primaryAuthenticationHandler"
-		  class="org.jasig.cas.adaptors.jdbc.QueryDatabaseAuthenticationHandler"
-		  p:dataSource-ref="dataSource"
-		  p:passwordEncoder-ref="MD5PasswordEncoder"
-		  p:sql="select password from gm_user where state='1' and login=?"
- 		/>
 
-	<bean id="MD5PasswordEncoder" class="org.jasig.cas.authentication.handler.DefaultPasswordEncoder">
-		<constructor-arg index="0">
-			<value>MD5</value>
-		</constructor-arg>
-	</bean>
+    <bean id="primaryAuthenticationHandler"
+                    class="org.jasig.cas.adaptors.jdbc.QueryDatabaseAuthenticationHandler"
+                    p:dataSource-ref="dataSource" />
 
 
-	<!-- Required for proxy ticket mechanism -->
+
+    <!-- Required for proxy ticket mechanism -->
     <bean id="proxyPrincipalResolver"
           class="org.jasig.cas.authentication.principal.BasicPrincipalResolver" />
 

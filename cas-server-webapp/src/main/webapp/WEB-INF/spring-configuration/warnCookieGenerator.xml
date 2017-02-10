@@ -35,6 +35,6 @@
           p:cookieSecure="false"
           p:cookieMaxAge="-1"
           p:cookieName="CASPRIVACY"
-          p:cookiePath=""/>
+          p:cookiePath="/cas"/>
 
 </beans>

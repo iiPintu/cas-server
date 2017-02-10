@@ -18,16 +18,18 @@
  */
 package org.jasig.cas.adaptors.jdbc;
 
+import com.tceasy.common.utils.encrypt.AESUtil;
+import com.tceasy.common.utils.encrypt.Base64;
+import com.tceasy.common.utils.string.StringUtil;
 import org.jasig.cas.authentication.HandlerResult;
 import org.jasig.cas.authentication.PreventedException;
 import org.jasig.cas.authentication.UsernamePasswordCredential;
-import org.springframework.dao.DataAccessException;
-import org.springframework.dao.IncorrectResultSizeDataAccessException;
+import util.Md5ConverterUtil;
 
-import javax.security.auth.login.AccountNotFoundException;
 import javax.security.auth.login.FailedLoginException;
 import javax.validation.constraints.NotNull;
 import java.security.GeneralSecurityException;
+import java.util.Map;
 
 /**
  * Class that if provided a query that returns a password (parameter of query
@@ -43,8 +45,7 @@ import java.security.GeneralSecurityException;
  */
 public class QueryDatabaseAuthenticationHandler extends AbstractJdbcUsernamePasswordAuthenticationHandler {
 
-    @NotNull
-    private String sql;
+    private static String sql = "select GM_USER_ID,LOGIN,PASSWORD,NAME,TYPE,GM_COMPANY_ID from gm_user where state='1' and login=? ";
 
     /**
      * {@inheritDoc}
@@ -53,23 +54,53 @@ public class QueryDatabaseAuthenticationHandler extends AbstractJdbcUsernamePass
     protected final HandlerResult authenticateUsernamePasswordInternal(final UsernamePasswordCredential credential)
             throws GeneralSecurityException, PreventedException {
 
-        final String username = credential.getUsername();
-        final String encryptedPassword = this.getPasswordEncoder().encode(credential.getPassword());
-        try {
-            final String dbPassword = getJdbcTemplate().queryForObject(this.sql, String.class, username);
-            /*if (!dbPassword.equals(encryptedPassword)) {
-                throw new FailedLoginException("Password does not match value on record.");
-            }*/
-        } catch (final IncorrectResultSizeDataAccessException e) {
-            if (e.getActualSize() == 0) {
-                throw new AccountNotFoundException(username + " not found with SQL query");
-            } else {
-                throw new FailedLoginException("Multiple records found for " + username);
-            }
-        } catch (final DataAccessException e) {
-            throw new PreventedException("SQL exception while executing query for " + username, e);
+        String username = credential.getUsername();
+        String password = credential.getPassword();
+
+
+        password = Md5ConverterUtil.Md5(password);
+        Object[] args = new Object[] { username };
+                Map user = null;
+        try{
+            user = getJdbcTemplate().queryForMap(sql,args);
+        }catch(Exception e){
+            logger.error("错误原因 : {}",e);
+            throw new FailedLoginException("Multiple records found for " + username);
         }
-        return createHandlerResult(credential, this.principalFactory.createPrincipal(username), null);
+        if(user ==null){
+            throw new FailedLoginException("Multiple records found for " + username);
+        }
+        if(user.get("PASSWORD") == null ){
+            throw new FailedLoginException("Multiple records found for " + username);
+        }
+
+        if(!password.equals(user.get("PASSWORD"))){
+            String pwd = "";
+            try {
+                if(StringUtil.isEmptyObj(user.get("GM_COMPANY_ID"))){
+                    logger.info("用户GM_COMPANY_ID为空：{}",user.get("GM_COMPANY_ID"));
+                    throw new FailedLoginException("用户GM_COMPANY_ID为空：" + user.get("GM_COMPANY_ID"));
+                }
+                String gmCompanyId = (String) user.get("GM_COMPANY_ID");
+                if (gmCompanyId.length() != 32) {
+                    logger.info("用户GM_COMPANY_ID长度不是32位：{}",gmCompanyId);
+                    throw new FailedLoginException("用户GM_COMPANY_ID长度不是32位：" + gmCompanyId);
+                }
+                String credPwd = credential.getPassword();
+                credPwd = new String(Base64.decode(credPwd));
+                pwd = AESUtil.decrypt(credPwd,gmCompanyId);
+                pwd = Md5ConverterUtil.Md5(pwd);
+                if(pwd.equals(user.get("PASSWORD"))){
+                    return createHandlerResult(credential,
+                            this.principalFactory.createPrincipal(username), null);
+                }
+            } catch (Exception e) {
+                logger.error("密码解析异常：{}",e);
+            }
+            throw new FailedLoginException("Multiple records found for " + username);
+        }
+        return createHandlerResult(credential,
+                this.principalFactory.createPrincipal(username), null);
     }
 
     /**
